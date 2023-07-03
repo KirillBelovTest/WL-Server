@@ -1,0 +1,144 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 13.3' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[      5156,        136]
+NotebookOptionsPosition[      4039,        113]
+NotebookOutlinePosition[      4464,        130]
+CellTagsIndexPosition[      4421,        127]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[{
+ RowBox[{"PacletInstall", "[", "\"\<KirillBelov/Internal\>\"", "]"}], "\n", 
+ RowBox[{"PacletInstall", "[", "\"\<KirillBelov/Objets\>\"", "]"}], "\n", 
+ RowBox[{"PacletInstall", "[", "\"\<KirillBelov/TCPServer\>\"", 
+  "]"}]}], "Input",ExpressionUUID->"63cb8489-ef33-451d-ac3f-678bc4eea32f"],
+
+Cell[BoxData[{
+ RowBox[{"Get", "[", "\"\<KirillBelov`Internal`\>\"", "]"}], "\n", 
+ RowBox[{"Get", "[", "\"\<KirillBelov`Objects`\>\"", "]"}], "\n", 
+ RowBox[{"Get", "[", "\"\<KirillBelov`TCPServer`\>\"", "]"}]}], "Input",Expres\
+sionUUID->"f6c0d562-6b40-486f-b302-99cc18b743cb"],
+
+Cell[BoxData[
+ RowBox[{"tcp", "=", 
+  RowBox[{"TCPServer", "[", "]"}]}]], "Input",ExpressionUUID->"3ecddf64-1ea1-\
+45e6-abd4-1f3d402c43d7"],
+
+Cell[BoxData[
+ RowBox[{"listener", "=", 
+  RowBox[{"SocketListen", "[", 
+   RowBox[{"8000", ",", 
+    RowBox[{
+     RowBox[{"tcp", "@", "#"}], "&"}]}], "]"}]}]], "Input",ExpressionUUID->\
+"dbd18c6d-4642-48b0-845a-dec145777615"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"tcp", "[", 
+   RowBox[{"\"\<CompleteHandler\>\"", ",", " ", "\"\<Ping\>\""}], "]"}], "=", 
+  RowBox[{"pingQ", "->", "pingLength"}]}], "\n", 
+ RowBox[{
+  RowBox[{"tcp", "[", 
+   RowBox[{"\"\<MessageHandler\>\"", ",", " ", "\"\<Ping\>\""}], "]"}], "=", 
+  RowBox[{"pingQ", "->", "pong"}]}]}], "Input",ExpressionUUID->"8ea0316b-5cf0-\
+4153-9642-9042d55fcf89"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"pingQ", "[", 
+   RowBox[{"client_SocketObject", ",", "message_ByteArray"}], "]"}], ":=", 
+  "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{"Return", ":", 
+    RowBox[{"True", "|", "False"}]}], "*)"}], "\[IndentingNewLine]", 
+  RowBox[{"Echo", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"ByteArrayToString", "[", "message", "]"}], "==", 
+     "\"\<ping\>\""}], ",", " ", "\"\<pingQ\>\""}], "]"}]}]], "Input",Expressi\
+onUUID->"27b5d284-8390-427d-a764-e4969a93afaf"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"pingLength", "[", 
+   RowBox[{"client_SocketObject", ",", "message_ByteArray"}], "]"}], ":=", 
+  "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{"Return", ":", "_Integer"}], "*)"}], "\[IndentingNewLine]", 
+  RowBox[{"Echo", "[", 
+   RowBox[{
+    RowBox[{"Length", "[", "message", "]"}], ",", " ", "\"\<pingLength\>\""}],
+    "]"}]}]], "Input",ExpressionUUID->"b304829c-ddea-407a-880b-835d2deaa9a1"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"pong", "[", 
+   RowBox[{"cleint_SocketObject", ",", "message_ByteArray"}], "]"}], ":=", 
+  RowBox[{"(", "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"Echo", "[", 
+     RowBox[{"message", ",", " ", "\"\<ping\>\""}], "]"}], ";", 
+    "\[IndentingNewLine]", 
+    RowBox[{"(*", 
+     RowBox[{"Return", ":", 
+      RowBox[{"ByteArray", "[", "]"}]}], "*)"}], "\[IndentingNewLine]", 
+    RowBox[{"Echo", "[", 
+     RowBox[{
+      RowBox[{"StringToByteArray", "[", "\"\<pong\>\"", "]"}], ",", " ", 
+      "\"\<pong\>\""}], "]"}]}], "\[IndentingNewLine]", ")"}]}]], "Input",Expr\
+essionUUID->"402e20fe-b6e2-49ba-80b3-73ecedee94ed"],
+
+Cell[BoxData[{
+ RowBox[{"socket", "=", 
+  RowBox[{"SocketConnect", "[", "8000", "]"}]}], "\[IndentingNewLine]", 
+ RowBox[{"BinaryWrite", "[", 
+  RowBox[{"socket", ",", 
+   RowBox[{"StringToByteArray", "[", "\"\<ping\>\"", "]"}]}], "]"}], "\n", 
+ RowBox[{"result", " ", "=", " ", 
+  RowBox[{"SocketReadMessage", "[", "socket", "]"}]}], "\n", 
+ RowBox[{"ByteArrayToString", "[", "result", "]"}], "\n", 
+ RowBox[{"Close", "[", "socket", "]"}]}], "Input",ExpressionUUID->"da8e23cd-\
+4534-4bac-bc42-5d76e5acc6f9"]
+},
+WindowSize->{958, 980},
+WindowMargins->{{Automatic, -7}, {Automatic, 0}},
+TrackCellChangeTimes->False,
+FrontEndVersion->"13.3 for Microsoft Windows (64-bit) (June 3, 2023)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"47136888-d92b-4af7-a48c-feb7f5929f10"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[558, 20, 306, 4, 70, "Input",ExpressionUUID->"63cb8489-ef33-451d-ac3f-678bc4eea32f"],
+Cell[867, 26, 279, 4, 70, "Input",ExpressionUUID->"f6c0d562-6b40-486f-b302-99cc18b743cb"],
+Cell[1149, 32, 139, 3, 29, "Input",ExpressionUUID->"3ecddf64-1ea1-45e6-abd4-1f3d402c43d7"],
+Cell[1291, 37, 227, 6, 29, "Input",ExpressionUUID->"dbd18c6d-4642-48b0-845a-dec145777615"],
+Cell[1521, 45, 392, 9, 50, "Input",ExpressionUUID->"8ea0316b-5cf0-4153-9642-9042d55fcf89"],
+Cell[1916, 56, 505, 13, 70, "Input",ExpressionUUID->"27b5d284-8390-427d-a764-e4969a93afaf"],
+Cell[2424, 71, 437, 10, 70, "Input",ExpressionUUID->"b304829c-ddea-407a-880b-835d2deaa9a1"],
+Cell[2864, 83, 660, 16, 110, "Input",ExpressionUUID->"402e20fe-b6e2-49ba-80b3-73ecedee94ed"],
+Cell[3527, 101, 508, 10, 110, "Input",ExpressionUUID->"da8e23cd-4534-4bac-bc42-5d76e5acc6f9"]
+}
+]
+*)
+
