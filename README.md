@@ -183,7 +183,7 @@ http["MessageHandler", "GETFile"] =
 </html>
 ```
 
-И откроем браузер по адресу [http://localhostL:8000](http://localhost:8000).
+И откроем браузер по адресу [http://localhostL:8000/index.html](http://localhost:8000/index.html).
 
 ![Index](index-1.png)
 
@@ -234,9 +234,39 @@ http["MessageHandler", "Plot"] = plotQ -> plot
 
 ![Plot[Sin[x], {x, 1, 10}]](plot(sin).png)
 
-Все работает. Для упровещения создания API можно использовать несколько заранее
+## API
+
+Для упровещения создания API можно использовать несколько заранее
 созданных функций. Одна из них - это `AssocMatchQ`. Ниже пример использования:
 
 ```mathematica
-AssocMatchQ[<|"Method" -> "GET"|>][<|"Method" -> "GET", "Query" -> <||>]
+AssocMatchQ[<|"Method" -> "GET"|>][<|"Method" -> "GET", "Query" -> <||>] (* => True *)
 ```
+
+Эта функция сравнивает ассоциацию с шаблоном. В правых частях правил можно использовать
+`StringExpression` вот так:
+
+```mathematica
+AssocMatchQ[<|"Path" -> "/" ~~ __ ~~ ".html"|>][<|"Method" -> "GET", "Path" -> "/page.html"] (* => True *)
+```
+
+Еще стоит использовать встроенную функцию `APIFunction`.
+Например, реализовать вызов построения графика можно вот так:
+
+```mathematica
+plot[request_Association] := 
+APIFunction[
+    {"func" -> "String", "from" -> "Number", "to" -> "Number"}, 
+    ExportString[Plot[Evaluate[ToExpression[#func]][x], {x, #from, #to}], "PNG"]&
+][request["Query"]]
+```
+
+Мы можем так же встроить эту реализацию на веб-страницу. Добавим элемент в _index.html_:
+
+```html
+<img src="/plot?func=Cos&from=1&to=13" alt />
+```
+
+И снова откроем [index.html](http://localhost:8000/index.html):
+
+![index-2](index-2.png)

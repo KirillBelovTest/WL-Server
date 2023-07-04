@@ -89,6 +89,13 @@ plot[request_Association] := Module[{func, from, to, graphics},
 ]
 
 
+plot[request_Association] := 
+APIFunction[
+    {"func" -> "String", "from" -> "Number", "to" -> "Number"}, 
+    ExportString[Plot[Evaluate[ToExpression[#func]][x], {x, #from, #to}], "PNG"]&
+][request["Query"]]
+
+
 http["MessageHandler", "Plot"] = plotQ -> plot
 
 
