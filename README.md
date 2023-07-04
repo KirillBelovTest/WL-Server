@@ -111,6 +111,13 @@ Close[socket]
 Чтобы это сделать на уровне TCP нам достаточно добавить новые обработчики
 по аналогии с обработчиками сообщения `ping`.
 
+Чтобы этот обработчик не мешал нам, очистим все обработчики:
+
+```mathematica
+tcp["CompleteHandler"] = <||>
+tcp["MessageHandler"] = <||>
+```
+
 ## HTTP
 
 Теперь давайте добавим серверу возможность работать по протоколу HTTP.
@@ -138,7 +145,7 @@ http = HTTPHandler[]
 
 ```mathematica
 tcp["CompleteHandler", "HTTP"] = HTTPPacketQ -> HTTPPacketLength
-tcp["CompleteHandler", "HTTP"] = HTTPPacketQ -> http
+tcp["MessageHandler", "HTTP"] = HTTPPacketQ -> http
 ```
 
 Готово. Теперь нужно наделить функционильностью сам обработчик HTTP-сообщений,
@@ -183,3 +190,53 @@ http["MessageHandler", "GETFile"] =
 Все вышеперечисленные функции принимают на вход один аргумент.
 Чтобы понять, что это за аргумент давайте добавим еще один обработчик,
 но не из заранее определенных. Создадим его сами.
+Добавим серверу возможность строить график в формате SVG.
+Сначала функция, которая проверяет, что это запрос на построение графика:
+
+```mathematica
+plotQ[request_Association] := And[
+    request["Method"] == "GET", 
+    request["Path"] == "/plot"
+]
+```
+
+Функция должна принимать на вход ассоциацию, а возвращать логическое значение.
+Ассоциация содержит внутри себя разобранный запрос:
+
+* `"Method"` - метод HTTP запроса. Например, `GET`, `POST`, `PUT`, ...
+* `"Path"` - адрес запроса. Например, `/pages/about.html`
+* `"Query"` - URL параметры запроса - `/page?name=Ivan&Age=25`
+* `"Headers"` - заголовки HTTP-запроса - `content-type: application/json`
+* `"Body"` - тело запроса
+
+Следующая функция, которая принимает на вход эту же ассоциацию и возвращает или строку или ассоциацию.
+
+```mathematica
+plot[request_Association] := Module[{func, from, to, graphics}, 
+    func = ToExpression[request["Query", "func"]]; 
+    from = ToExpression[request["Query", "from"]]; 
+    to = ToExpression[request["Query", "to"]]; 
+
+    graphics = Plot[func[x], {x, from, to}]; 
+
+    (*Return: _String*)
+    ExportString[graphics, "SVG"]
+]
+```
+
+Теперь добавим этот функционал в обработчик:
+
+```mathematica
+http["MessageHandler", "Plot"] = plotQ -> plot
+```
+
+Перейдем в браузере по адресу <http://localhost:8000/plot?func=Sin&from=1&to=10>:
+
+![Plot[Sin[x], {x, 1, 10}]](plot(sin).png)
+
+Все работает. Для упровещения создания API можно использовать несколько заранее
+созданных функций. Одна из них - это `AssocMatchQ`. Ниже пример использования:
+
+```mathematica
+AssocMatchQ[<|"Method" -> "GET"|>][<|"Method" -> "GET", "Query" -> <||>]
+```

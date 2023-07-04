@@ -69,4 +69,27 @@ tcp["MessageHandler", "HTTP"] = HTTPPacketQ -> http
 http["MessageHandler", "GETFile"] = GetFileRequestQ[{"html", "js", "css", "svg", "png", "jpg"}] -> ImportFileAsText
 
 
+plotQ[request_Association] := And[
+    request["Method"] == "GET", 
+    request["Path"] == "/plot"
+]
+
+
+plot[request_Association] := Module[{func, from, to, graphics}, 
+    With[{
+		func = ToExpression[request["Query", "func"]], 
+    	from = ToExpression[request["Query", "from"]], 
+    	to = ToExpression[request["Query", "to"]]
+	}, 
+    	graphics = Plot[func[x], {x, from, to}]; 
+	]; 
+
+    (*Return: _String*)
+    ExportString[graphics, "SVG"]
+]
+
+
+http["MessageHandler", "Plot"] = plotQ -> plot
+
+
 While[True, Pause[0.001]]
