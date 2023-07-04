@@ -4,9 +4,9 @@
 (*Default Initialization*)
 
 
-PacletInstall["KirillBelov/Internal"]
-PacletInstall["KirillBelov/Objets"]
-PacletInstall["KirillBelov/TCPServer"]
+(*PacletInstall["KirillBelov/Internal"]*)
+(*PacletInstall["KirillBelov/Objets"]*)
+(*PacletInstall["KirillBelov/TCPServer"]*)
 
 
 Get["KirillBelov`Internal`"]
@@ -48,3 +48,25 @@ ByteArrayToString[result]
 Close[socket]
 
 
+tcp["CompleteHandler"] = <||>
+tcp["MessageHandler"] = <||>
+
+
+(*PacletInstall["KirillBelov/HTTPHandler"]*)
+
+
+Get["KirillBelov`HTTPHandler`"]
+Get["KirillBelov`HTTPHandler`Extensions`"]
+
+
+http = HTTPHandler[]
+
+
+tcp["CompleteHandler", "HTTP"] = HTTPPacketQ -> HTTPPacketLength
+tcp["MessageHandler", "HTTP"] = HTTPPacketQ -> http
+
+
+http["MessageHandler", "GETFile"] = GetFileRequestQ[{"html", "js", "css", "svg", "png", "jpg"}] -> ImportFileAsText
+
+
+While[True, Pause[0.001]]
