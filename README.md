@@ -94,3 +94,36 @@ result = SocketReadMessage[socket]
 ByteArrayToString[result]
 Close[socket]
 ```
+
+В итоге после выполнения последнего блока кода в консоль (или в окно *Messages*)
+напечатается следующее:
+
+>```log
+>>> pingQ True
+>>> pingLength 4
+>>> pingQ True
+>>> ping ByteArray[<4>]
+>>> pong ByteArray[<4>]
+>```
+
+Это будет значит, что сервер работает. Его самая минимальная функциональность готова.
+Теперь не останавливая сервис мы можем продолжить наполнять его функциональность.
+Чтобы это сделать на уровне TCP нам достаточно добавить новые обработчики
+по аналогии с обработчиками сообщения `ping`.
+
+## HTTP
+
+Теперь давайте добавим серверу возможность работать по протоколу HTTP.
+Для этого необходимо установить еще один пакет:
+
+```mathematica
+PacletInstall["KirillBelov/HTTPHandler"]
+```
+
+И импортируем:
+
+```mathematica
+Get["KirillBelov`HTTPHandler`"]
+Get["KirillBelov`HTTPHandler`Extensions`"]
+```
+
