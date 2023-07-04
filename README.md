@@ -261,7 +261,7 @@ APIFunction[
 ][request["Query"]]
 ```
 
-Мы можем так же встроить эту реализацию на веб-страницу. Добавим элемент в _index.html_:
+Мы можем так же встроить эту реализацию на веб-страницу. Добавим элемент в *index.html*:
 
 ```html
 <img src="/plot?func=Cos&from=1&to=13" alt />
@@ -270,3 +270,5 @@ APIFunction[
 И снова откроем [index.html](http://localhost:8000/index.html):
 
 ![index-2](index-2.png)
+
+## WebSocket
