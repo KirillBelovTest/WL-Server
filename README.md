@@ -39,7 +39,7 @@ flowchart TD
     C --> |Client + Frame| G(Remote Kernel)
     G -->|Code| F[Interactive Cells]
     G --->|Code| H[Dynamic Web Elements]
-    click A #HTTP-Handler
+    click A https://github.com/KirillBelovTest/WolframWebServer#http-handler
 ```
 
 [click](#http-handler)
