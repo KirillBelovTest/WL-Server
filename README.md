@@ -40,6 +40,7 @@ flowchart TD
     G -->|Code| F[Interactive Cells]
     G --->|Code| H[Dynamic Web Elements]
     click A #HTTP-Handler
+```
 
 [click](#HTTP-Handler)
 
