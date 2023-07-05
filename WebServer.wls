@@ -99,4 +99,32 @@ APIFunction[
 http["MessageHandler", "Plot"] = plotQ -> plot
 
 
+apiQ = AssocMatchQ[<|"Path" -> "/api/" ~~ __|>]
+
+
+argType[arg_String] := 
+Which[
+    StringMatchQ[arg, NumberString], "Number", 
+    True, "String"
+]
+
+
+apiFunс[request_Association] := 
+Module[{format}, 
+    format = If[KeyExistsQ[request["Query"], "format"], request["Query", "format"], "String"]; 
+    With[{
+        func = ToExpression[StringSplit[request["Path"], "/"][[-1]]], 
+        args = Normal[Map[argType, Delete[request["Query"], "format"]]]
+    }, 
+        ExportString[APIFunction[args, func][request["Query"]], format]
+    ]
+]
+
+
+http["MessageHandler", "API"] = apiQ -> apiFunс
+
+
+besselAPI = Function[BesselJ[#n, N@#z]]
+
+
 While[True, Pause[0.001]]

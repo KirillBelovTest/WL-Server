@@ -1,14 +1,48 @@
 # Wolfram Web Server
 
-Wolfram Web Server
+## TLDR
 
-## Цель
+Запускаем файл _WolframWebServer.wls_ либо двойным щелчком либо из консоли командой:
 
-Наша цель - работающий веб-сервер, полностью написанный на Wolfram Language.
-Чтобы достичь этой цели, мы должны поочередно реализовать все необхолимые уровни модели OSI,
-которые не предтавлены в Wolfram.
+```bash
+wolframscript -f WolframWebServer.wls
+```
 
-## TCP
+Затем открываем браузер по адресу <http://localhost:8000>.
+
+## Schema
+
+Наша цель - веб-сервер, полностью написанный на Wolfram Language.
+Низкоуровневая часть сервера работает на основе встроенных функций:
+
+* [`SocketListen`](https://reference.wolfram.com/language/ref/SocketListen.html) -
+запускает асинхронную задачу прослушивающую указанный порт или сокет
+* [`SocketListener`](https://reference.wolfram.com/language/ref/SocketListener.html) -
+объект "слушателя". Его можно остановить или удалить. Кроме того в нем содержится информация.
+* [`SocketObject`](https://reference.wolfram.com/language/ref/SocketObject.html) -
+Объект представляющий сам сокет
+
+С их помощью мы можем создать объект, который представляет собой сервер.
+Этот объект сможет прослушивать пакеты приходящие по сети и отправлять ответы.
+Эти встроенные функции используют библиотеку ZeroMQ.
+С их помощью мы сможем реализовать сначала сервер работающий по протоколу TCP,
+а затем поверх этого сервера мы реализует другие верхнеуровневые протоколы.
+Примерная схема работы сервера представлена ниже:
+
+```mermaid
+flowchart TD
+    X{{ZeroMQ Socket Listener}} -->|Packet| A
+    A[[TCP Server]] -->|Client + Message| B(HTTP Handler)
+    B -->|Parsed Request| D[Static HTML]
+    B --->|Parsed Request| E[Wolfram Script Pages]
+    A ----->|Client + Message| C(WebSocket Handler)
+    C --> |Client + Frame| G(Remote Kernel)
+    G -->|Code| F[Interactive Cells]
+    G --->|Code| H[Dynamic Web Elements]
+    click A #TCP-Server
+```
+
+## TCP Server
 
 Первое, что мы сделаем - это создадим и сразу же запустим сервер,
 который работает по протоколу TCP. Сделать это довольно просто.
@@ -118,7 +152,7 @@ tcp["CompleteHandler"] = <||>
 tcp["MessageHandler"] = <||>
 ```
 
-## HTTP
+## HTTP Handler
 
 Теперь давайте добавим серверу возможность работать по протоколу HTTP.
 Для этого необходимо установить еще один пакет:
@@ -271,4 +305,67 @@ APIFunction[
 
 ![index-2](index-2.png)
 
+В итоге, мы можем создать небольшую функцию-обертку вот так:
+
+```mathematica
+apiQ := AssocMatchQ[<|"Path" -> "/api/" ~~ __|>]
+
+argType[arg_String] := 
+Which[
+    StringMatchQ[arg, NumberString], "Number", 
+    True, "String"
+]
+
+apiFunс[request_Association] := 
+Module[{format}, 
+    format = If[KeyExistsQ[request["Query"], "format"], request["Query", "format"], "String"]; 
+    With[{
+        func = ToExpresion[StringSplit[request["Path"], "/"][[-1]]], 
+        args = Normal[Map[argType, Delete[request["Query"], "format"]]]
+    }, 
+        ExportString[APIFunction[args, func][request["Query"]], format]
+    ]
+]
+```
+
+Добавим серверу этот API:
+
+```mathematica
+http["MessageHandler", "API"] = apiQ -> apiFunc
+```
+
+И теперь для добавления новой функции мы можем создать короткое определение.
+Например, функция, которая вычисляет функцияю Бесселя порядка `n` от переменной `z`:
+
+```mathematica
+besselAPI = Function[BesselJ[#n, N[#z]]]
+```
+
+## Plot Server
+
+Таким же образом мы можем сделать специальную API-функцию, которая будет читать файл с диска
+и возвращать даные в виде JSON-массива, который сразу же будет строится как график.
+Определимяся с API который мы хотим реализовать.
+
+* getDataFiles - список файлов с данными для построения
+* getPoints - собственно точки для построения
+
+```mathematica
+getDataFiles = Function[
+    
+]
+```
+
+## Wolfram Script Pages
+
+Использование WL в разметке страниц
+
 ## WebSocket
+
+Подключение по протоколу WS
+
+## Markdown
+
+Испортируем MD файлы как веб страницы.
+
+## 
