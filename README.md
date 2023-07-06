@@ -648,7 +648,7 @@ http["MessageHandler", "Index"] =
         <ul>
             <?wsp Table[?>
                 <li><?wsp file ?></li>
-            <?wsp , {file, FileNames[]}]?>
+            <?wsp , {file, FileNames[]}] ?>
         </ul>
     </body>
 </html>
