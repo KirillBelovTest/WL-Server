@@ -154,4 +154,18 @@ getDataFilePoints = Function[
 ]
 
 
+(*PacletInstall["JerryI/WSP"]*)
+
+
+Get["JerryI`WSP`"]
+Get["KirillBelov`HTTPHandler`WSPAdapter`"]
+
+
+http["MessageHandler", "WSP"] = GetFileRequestQ[{"wsp"}] -> HypertextProcess
+
+
+http["MessageHandler", "Index"] = 
+    AssocMatchQ[<|"Path" -> "/"|>] -> Function[HypertextProcess[#, "index.wsp"]]
+
+
 While[True, Pause[0.001]]

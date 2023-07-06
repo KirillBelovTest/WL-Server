@@ -33,9 +33,10 @@ wolframscript -f WolframWebServer.wls
 flowchart TD
     X{{ZeroMQ Socket Listener}} -->|Packet| A
     A[[TCP Server]] -->|Client + Message| B(HTTP Handler)
-    B -->|Parsed Request| D[Static HTML]
-    B --->|Parsed Request| E[Wolfram Script Pages]
-    A ----->|Client + Message| C(WebSocket Handler)
+    B -->|Parsed Request| T[API]
+    B --->|Parsed Request| D[Static HTML]
+    B ---->|Parsed Request| E[Wolfram Script Pages]
+    A ------>|Client + Message| C(WebSocket Handler)
     C --> |Client + Frame| G(Remote Kernel)
     G -->|Code| F[Interactive Cells]
     G --->|Code| H[Dynamic Web Elements]
@@ -313,6 +314,8 @@ http["MessageHandler", "Plot"] = plotQ -> plot
 
 ## API
 
+### API Funcs
+
 Для упровещения создания API можно использовать несколько заранее
 созданных функций. Одна из них - это `AssocMatchQ`. Ниже пример использования:
 
@@ -414,7 +417,7 @@ bessel = Function[BesselJ[#n, N[#z]]]
 
 И вот мы получили список файлов в рабочей директории в текущий момент.
 
-## Plot Server
+### Plot Server
 
 Таким же образом мы можем сделать специальную API-функцию, которая будет читать файл с диска
 и возвращать даные в виде JSON-массива, который сразу же будет строится как график.
@@ -443,6 +446,7 @@ getDataFilePoints = Function[
 
 ```mathematica
 Export["sin.dat", Table[{x, Sin[x]}, {x, -5, 5, 0.25}], "Table"]
+Export["sin.dat", Table[{x, Cos[x]}, {x, -5, 5, 0.25}], "Table"]
 ```
 
 И откроем браузер по адресу <http://localhost:8000/api/getDataFiles?format=JSON>:
@@ -509,7 +513,6 @@ function httpGet(theUrl)
 function currentEndpoint(){
     let protocol = window.location.protocol;
     let host = window.location.host;
-    let port = window.location.port;
     let endpoint = protocol + '//' + host;
     return endpoint;
 }
@@ -530,7 +533,6 @@ function getDataFilePoints(file){
 function listPlotly(file){
     let listPlotlyDiv = document.getElementById("list-plotly"); 
     let data = getDataFilePoints(file); 
-    
     let layout = {
         autosize: false,
         width: 500,
@@ -552,9 +554,98 @@ function listPlotly(file){
 
 ![listPlotly](listPlotly.png)
 
+Все работает. Благодаря JavaScript мы можем выбирать доступные файлы на диске
+и смотреть их содержимое в виде графика. Благодаря использованию HTTP-клиента
+в JS мы можем обновлять график без перезагрузки страницы.
+
 ## Wolfram Script Pages
 
-Использование WL в разметке страниц
+Wolfram Script Pages - мощный подход к созданию HTML страниц используя
+язык Wolfram напрямую в разметке страницы. Данный подход чем-то похож
+на Java Server Pages (которые используются в WebMathematica) или на PHP.
+В этом разделе мы будут базовые примеры использования WSP на стороне сервера.
+
+### Как работает WSP
+
+Все очень просто - WSP расширяет синтаксис разметки HTML, добавляя новый тег:
+
+```html
+<div>
+    <?wsp DateString[] ?>
+</div>
+```
+
+Добавив такой тег в страницу сервер на Wolfram Language заменит тег на текущую дату.
+Это произойдет на **стороне сервера**. Т.е. эту разметку нельзя увидеть в браузере.
+Чаще всего такая разметка хранится в файлах с расширением _.wsp_.
+А во время запроса к этому файлу сервер преобразует всю разметку в валидный HTML.
+Но одиночный тег - это не единственный способ вставить выражение на WL в разметку.
+Выражения можно делить и перемешивать в другими тегами и текстом.
+Вот так например можно создать список:
+
+```html
+<ul>
+    <?wsp Table[?>
+        <li><?wsp file ?></li>
+    <?wsp {file, getDataFiles[]}]?>
+</ul>
+```
+
+Кроме того графики по умолчанию обрабатываются и превращаются в SVG:
+
+```html
+<?wsp Plot[Evaluate[Table[BesselJ[i, x], {i, 0, 4}]], {x, 0, 5}]] ?>
+```
+
+В общем такой подход позволяет воплотить в жизнь любые свои фантазии по
+скрещиванию HTML и WL. Больше узнать про WSP можно в репозитоии Кирилла Васина:
+<https://github.com/JerryI/wl-wsp>.
+
+### Как использовать
+
+Для начала нужно установить пакет из Paclet Repositoy:
+
+```mathematica
+PacletInstall["JerryI/WSP"]
+```
+
+И импортировать определения:
+
+```mathematica
+Get["JerryI`WSP`"]
+Get["KirillBelov`HTTPHandler`WSPAdapter`"]
+```
+
+Теперь добавим в HTTP обработчик саму возможность обрабатывать WSP:
+
+```mathematica
+http["MessageHandler", "WSP"] = GetFileRequestQ[{"wsp"}] -> HypertextProcess
+```
+
+А так же сделаем страницей по умолчанию _index.wsp_:
+
+```mathematica
+http["MessageHandler", "Index"] = 
+    AssocMatchQ[<|"Path" -> "/"|>] -> Function[HypertextProcess[#, "index.wsp"]]
+```
+
+И создадим страницу _inedx.wsp_:
+
+```html
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Wolfram Web Server</title>
+    </head>
+    <body>
+        <h1>Wolfram Web Server</h1>
+        <?wsp DateString[] ?>
+    </body>
+</html>
+```
+
+И перейдем на страницу по умолчанию <http://localhost:8000>
 
 ## WebSocket
 
