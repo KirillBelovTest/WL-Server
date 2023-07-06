@@ -640,12 +640,23 @@ http["MessageHandler", "Index"] =
     </head>
     <body>
         <h1>Wolfram Web Server</h1>
-        <?wsp DateString[] ?>
+        Текущее время<br/>
+        <?wsp DateString[] ?><br/>
+        График<br/>
+        <?wsp Plot[{Sin[x], Cos[x]}, {x, -5, 5}] ?><br/>
+        Список файлов: <br/>
+        <ul>
+            <?wsp Table[?>
+                <li><?wsp file ?></li>
+            <?wsp , {file, FileNames[]}]?>
+        </ul>
     </body>
 </html>
 ```
 
 И перейдем на страницу по умолчанию <http://localhost:8000>
+
+![index-wsp](index-wsp.png)
 
 ## WebSocket
 
