@@ -18,9 +18,9 @@ wolframscript -f WolframWebServer.wls
 * [`SocketListen`](https://reference.wolfram.com/language/ref/SocketListen.html) -
 запускает асинхронную задачу прослушивающую указанный порт или сокет
 * [`SocketListener`](https://reference.wolfram.com/language/ref/SocketListener.html) -
-объект "слушателя". Его можно остановить или удалить. Кроме того в нем содержится информация.
+объект "слушателя"
 * [`SocketObject`](https://reference.wolfram.com/language/ref/SocketObject.html) -
-Объект представляющий сам сокет
+объект представляющий сам сокет
 
 С их помощью мы можем создать объект, который представляет собой сервер.
 Этот объект сможет прослушивать пакеты приходящие по сети и отправлять ответы.
@@ -39,12 +39,23 @@ flowchart TD
     C --> |Client + Frame| G(Remote Kernel)
     G -->|Code| F[Interactive Cells]
     G --->|Code| H[Dynamic Web Elements]
-    click A href "https://github.com/KirillBelovTest/WolframWebServer#http-handler"
 ```
 
-[click](#http-handler)
+В этом руководстве начав сверху и двигаясь вниз по блокам из схемы
+мы реализуем свой веб-сервер, который будет использовать возможности
+браузера, а так же всю мощь языка Wolfram.
 
 ## TCP Server
+
+---
+
+* Сервер - объект `TCPServer`, который задан в качестве обработчика в `SocketListener`
+* Клиент - объект `SocketObject`, т.е. входящее соединение для сервера
+* Пакет - ассоциация, которая представляет собой TCP-пакет пришедший по сети
+* Сообщение - цельные данные одного или множества сетевых пакетов
+* Обработчик - функция, которая применяется к полученному пакету или сообщению
+
+---
 
 Первое, что мы сделаем - это создадим и сразу же запустим сервер,
 который работает по протоколу TCP. Сделать это довольно просто.
@@ -77,19 +88,28 @@ listener = SocketListen[8000, tcp@#&]
 ```
 
 Все готово. Но что дальше? Сервер ведь абсолютно пустой и ничео не делает.
-Нужно придумать для него функциональность. Допустим, первое, что мы сделаем - это 
-ответ на `ping`. Т.е. если в сервер приходит строка `ping`, то обратно он высылает `pong`.
-Для этого нам нужно добавить в сервер обработчик завершенности сообщений:
+Нужно придумать для него функциональность. Допустим, первое, что мы добавим -
+это ответ на `ping`. Т.е. если в сервер приходит сообщение с строкой `ping`,
+то обратно клиенту он высылает `pong`. Для этого нам нужно указать серверу
+обработчик _завершенности_ пакетов и сам обработчик сообщений:
 
 ```mathematica
 tcp["CompleteHandler", "Ping"] = pingQ -> pingLength
 tcp["MessageHandler", "Ping"] = pingQ -> pong
 ```
 
-Что значат строки выше? Всякий раз, когда сервер будет получать входящее сообщение,
-то он будет сначала применять функцию `pingQ`, чтобы убедиться, что запрос пришел именно за этим.
-Если это дейтствительно `ping`, то далее вычисляется ожидаемая длина этого сообщения при помощи
-функции `pingLength`. После того как входящее сообщение было завершено запускатся обработка
+Что значат строки выше? Всякий раз, когда сервер будет получать пакет,
+то он будет сначала применять функцию `pingQ`.
+Если это дейтствительно `ping`, то далее вычисляется ожидаемая длина сообщения при помощи
+функции `pingLength`. Зачем это сделано? Дело в том, что по протоколо TCP из сети будут
+приходить пакеты размером не более 8 кб. В случае коротких сообщений один пакет будет
+содержать одно сообщение целиком и тогда вычисление длины не понадобится,
+но если мы попытаемся выслать на сервер большой файл, то он будет разбит на
+множество пакетов длиной по 8 кб. И когда к нам придет первый пакет мы должны
+точно определить какого развера этот файл. Иначе после мы уже не сможем быть уверенны,
+что файл пришел целиком. Именно для этого нужен обрабочик завершенности,
+который проверяет длину сообщения.
+После того, как входящее сообщение было завершено запускатся обработка
 сообщения при помощи функции `pong`. Т.е. мы добавили в наш сервер 3 функции,
 но пока что ни одну не определили. Давайте сделаем это! Основное внимание на аргументы -
 все три функции должны принимать на вход два аргумента. Первый аргумент - это сокет, т.е.
@@ -131,7 +151,7 @@ ByteArrayToString[result]
 Close[socket]
 ```
 
-В итоге после выполнения последнего блока кода в консоль (или в окно *Messages*)
+В итоге после выполнения последнего блока кода в консоль (или в окно _Messages_)
 напечатается следующее:
 
 >```log
@@ -142,12 +162,12 @@ Close[socket]
 >>> pong ByteArray[<4>]
 >```
 
-Это будет значит, что сервер работает. Его самая минимальная функциональность готова.
-Теперь не останавливая сервис мы можем продолжить наполнять его функциональность.
+Это будет значит, что сервер работает. Его минимальная функциональность готова.
+Теперь не останавливая сервер мы можем продолжить наполнять его функциональностью.
 Чтобы это сделать на уровне TCP нам достаточно добавить новые обработчики
 по аналогии с обработчиками сообщения `ping`.
 
-Чтобы этот обработчик не мешал нам, очистим все обработчики:
+Чтобы этот обработчик не мешал нам в дальнейшем, очистим все обработчики сервера вот так:
 
 ```mathematica
 tcp["CompleteHandler"] = <||>
@@ -156,6 +176,14 @@ tcp["MessageHandler"] = <||>
 
 ## HTTP Handler
 
+---
+
+* Запрос - сообщение формате HTTPRequest, пробразованное в ассоциацию
+* Ответ - ответ клиенту в формате HTTPResponse - массив байт или строка
+* Обработчик - здесь это функция, которая обрабатывает запросы
+
+---
+
 Теперь давайте добавим серверу возможность работать по протоколу HTTP.
 Для этого необходимо установить еще один пакет:
 
@@ -163,15 +191,15 @@ tcp["MessageHandler"] = <||>
 PacletInstall["KirillBelov/HTTPHandler"]
 ```
 
-И импортируем:
+И импортируем его:
 
 ```mathematica
 Get["KirillBelov`HTTPHandler`"]
 Get["KirillBelov`HTTPHandler`Extensions`"]
 ```
 
-Теперь чтобы добавить возможность обрабатыать запросы по HTTP мы должны сначала
-создать объект обработчика при помощи функции из пакеты:
+Чтобы добавить возможность обрабатывать запросы по HTTP,
+мы должны сначала создать объект обработчика при помощи функции из пакеты:
 
 ```mathematica
 http = HTTPHandler[]
@@ -180,28 +208,24 @@ http = HTTPHandler[]
 И добавим этот обработчик в работающий TCP-сервер вот так:
 
 ```mathematica
-tcp["CompleteHandler", "HTTP"] = HTTPPacketQ -> HTTPPacketLength
-tcp["MessageHandler", "HTTP"] = HTTPPacketQ -> http
+AddHTTPHandler[tcp, http]
 ```
 
-Готово. Теперь нужно наделить функционильностью сам обработчик HTTP-сообщений,
-т.к. по умолчанию он ничего не умеет и будет просто закрыать все входящие запросы.
-Для этого у обработчика есть свойство `"MessageHandler"`. Добавиь новый обработчик
-уже внутр HTTP мы можем в том же стиле, в котором добавляли новые обработчики
+Теперь нужно наделить функционильностью сам обработчик HTTP-сообщений,
+т.к. по умолчанию он ничего не умеет и будет просто закрывать все входящие соединения.
+Для этого у обработчика есть свойство `"MessageHandler"`. Добавить новый обработчик
+уже внутрь HTTP мы можем в том же стиле, в котором добавляли новые обработчики
 сообщений в TCP-сервер. Например вот так мы можем добавить серверу возможность
 при запросе файла отвечать этим самым файлом:
 
 ```mathematica
 http["MessageHandler", "GETFile"] = 
-    GetFileRequestQ[{"html", "js", "css", "svg", "png", "jpg"}] -> GetFileAsText
+    GetFileRequestQ[{"html", "js", "css", "svg", "png", "jpg"}] -> ImportFileAsText
 ```
 
-* `"GETFile"` - просто уникальный ключ в списке обработчиков.
-Он не несет в себе никакой функциональноти.
-* `GetFileRequestQ` - это функция, которая проверяет, что полученный запрос по HTTP
-использует метод `GET` и обращается к файлу на диске с указаннами расширениями.
-* `GetFileAsText` - импортирует файл с диска в виде строки, оборачивает его в HTTP-ответ
-и отправляет файл клиенту, который сделал этот запрос.
+* `"GETFile"` - просто уникальный ключ в списке обработчиков
+* `GetFileRequestQ` - проверяет, что запрос использует метод `GET` и запрашивает файл
+* `GetFileAsText` - импортирует файл и отправляет его клиенту
 
 Теперь давайте создадим в рабочией директории простую html-страницу _index.html_,
 в которой будет вот такая разметка:
@@ -223,44 +247,56 @@ http["MessageHandler", "GETFile"] =
 
 ![Index](index-1.png)
 
-Все вышеперечисленные функции принимают на вход один аргумент.
-Чтобы понять, что это за аргумент давайте добавим еще один обработчик,
-но не из заранее определенных. Создадим его сами.
+На скрншоте выше как раз изображен браузер с открытой страницей.
+Это означает, что запросы к веб-страницам или картинкам вполне работают.
+В дальнейшем мы сильно изменим разметку файла index.html,
+но не будем концентрировать на этом внимание, кроме самых важных деталей.
+Вместо этого мы сосредоточимся на том, чтобы подробно разобрать функциональность
+самого сервера.
+
+Все функции, которые мы добавляем в обработчик принимают на вход один аргумент,
+который представляет собой ассоциацию с разобраным сообщением - т.е. запрос.
+Ассоциация содержит внутри себя следующие ключи:
+
+* `"Method"` - метод HTTP запроса. Например, `GET`, `POST`, `PUT`, ...
+* `"Path"` - адрес запроса. Например, `/pages/about.html`
+* `"Query"` - URL параметры запроса `/page?name=Ivan&Age=25` в виде ассоциации
+* `"Headers"` - заголовки HTTP-запроса - `content-type: application/json`
+* `"Body"` - тело запроса
+
+Чтобы понять, как с этим запросом работать - создадим еще один обработчик.
 Добавим серверу возможность строить график в формате SVG.
-Сначала функция, которая проверяет, что это запрос на построение графика:
+Сначала функция, которая проверяет, что это запрос на построение графика.
+Функция должна принимать на вход запрос и возвращать логическое значение:
 
 ```mathematica
 plotQ[request_Association] := And[
     request["Method"] == "GET", 
-    request["Path"] == "/plot"
+    request["Path"] == "/plot", 
+    SubsetQ[{"func", "from", "to"}, Keys[request["Query"]]]
 ]
 ```
 
-Функция должна принимать на вход ассоциацию, а возвращать логическое значение.
-Ассоциация содержит внутри себя разобранный запрос:
-
-* `"Method"` - метод HTTP запроса. Например, `GET`, `POST`, `PUT`, ...
-* `"Path"` - адрес запроса. Например, `/pages/about.html`
-* `"Query"` - URL параметры запроса - `/page?name=Ivan&Age=25`
-* `"Headers"` - заголовки HTTP-запроса - `content-type: application/json`
-* `"Body"` - тело запроса
-
-Следующая функция, которая принимает на вход эту же ассоциацию и возвращает или строку или ассоциацию.
+Следующая функция, которая принимает на вход этот же запрос и возвращает строку.
+Кроме того можно возвращать ассоциацию, которая должна содержать в себе ключи
+`"Code"`, `"Message"`, `"Headers"` и `"Body"`.
 
 ```mathematica
 plot[request_Association] := Module[{func, from, to, graphics}, 
-    func = ToExpression[request["Query", "func"]]; 
-    from = ToExpression[request["Query", "from"]]; 
-    to = ToExpression[request["Query", "to"]]; 
-
-    graphics = Plot[func[x], {x, from, to}]; 
+    With[{
+        func = ToExpression[request["Query", "func"]], 
+        from = ToExpression[request["Query", "from"]], 
+        to = ToExpression[request["Query", "to"]]
+    }, 
+        graphics = Plot[func[x], {x, from, to}]; 
+    ]; 
 
     (*Return: _String*)
     ExportString[graphics, "SVG"]
 ]
 ```
 
-Теперь добавим этот функционал в обработчик:
+Теперь добавим этот функционал в `HTTPHandler`:
 
 ```mathematica
 http["MessageHandler", "Plot"] = plotQ -> plot
@@ -270,24 +306,29 @@ http["MessageHandler", "Plot"] = plotQ -> plot
 
 ![Plot[Sin[x], {x, 1, 10}]](plot(sin).png)
 
+Все работает (по крайней мере у меня). Теперь мы понимаем последовательность действий,
+коорые нужно выполнить, чтобы добавить новые возможности серверу для работы с HTTP.
+Еще раз напомню, что все это время мы не останавливали ранее TCP запущенный сервер,
+а проделали все изменения "на ходу".
+
 ## API
 
 Для упровещения создания API можно использовать несколько заранее
 созданных функций. Одна из них - это `AssocMatchQ`. Ниже пример использования:
 
 ```mathematica
-AssocMatchQ[<|"Method" -> "GET"|>][<|"Method" -> "GET", "Query" -> <||>] (* => True *)
+AssocMatchQ[<|"Method" -> "GET"|>][<|"Method" -> "GET", "Query" -> <||>|>] (* => True *)
 ```
 
 Эта функция сравнивает ассоциацию с шаблоном. В правых частях правил можно использовать
 `StringExpression` вот так:
 
 ```mathematica
-AssocMatchQ[<|"Path" -> "/" ~~ __ ~~ ".html"|>][<|"Method" -> "GET", "Path" -> "/page.html"] (* => True *)
+AssocMatchQ[<|"Path" -> __ ~~ ".html"|>][<|"Path" -> "/page.html"|>] (* => True *)
 ```
 
 Еще стоит использовать встроенную функцию `APIFunction`.
-Например, реализовать вызов построения графика можно вот так:
+Например, реализовать вызов построения графика можно вот так (теперь PNG, а не SVG):
 
 ```mathematica
 plot[request_Association] := 
@@ -297,7 +338,7 @@ APIFunction[
 ][request["Query"]]
 ```
 
-Мы можем так же встроить эту реализацию на веб-страницу. Добавим элемент в *index.html*:
+Мы можем так же встроить эту реализацию на веб-страницу. Добавим элемент в _index.html_:
 
 ```html
 <img src="/plot?func=Cos&from=1&to=13" alt />
@@ -307,25 +348,41 @@ APIFunction[
 
 ![index-2](index-2.png)
 
-В итоге, мы можем создать небольшую функцию-обертку вот так:
+В итоге, мы можем создать небольшую функцию-обертку.
+Сначала как обычно проверка:
 
 ```mathematica
-apiQ := AssocMatchQ[<|"Path" -> "/api/" ~~ __|>]
+apiQ = AssocMatchQ[<|"Path" -> "/api/" ~~ __|>]
+```
 
+Затем сама небольшая вспомогательная функция,
+которая извлекает из параметров запроса типы аргументов (пока только) строку и число:
+
+```mathematica
 argType[arg_String] := 
 Which[
     StringMatchQ[arg, NumberString], "Number", 
     True, "String"
 ]
+```
 
-apiFunс[request_Association] := 
-Module[{format}, 
+И сама функция:
+
+```mathematica
+api[request_Association] := 
+Module[{format, result}, 
     format = If[KeyExistsQ[request["Query"], "format"], request["Query", "format"], "String"]; 
     With[{
-        func = ToExpresion[StringSplit[request["Path"], "/"][[-1]]], 
+        func = ToExpression[StringSplit[request["Path"], "/"][[-1]]], 
         args = Normal[Map[argType, Delete[request["Query"], "format"]]]
     }, 
-        ExportString[APIFunction[args, func][request["Query"]], format]
+        result = If[Length[args] > 0, 
+            APIFunction[args, func][request["Query"]], 
+            func[]
+        ]; 
+
+        (*Return: _String*)
+        ExportString[result, format]
     ]
 ]
 ```
@@ -333,15 +390,29 @@ Module[{format},
 Добавим серверу этот API:
 
 ```mathematica
-http["MessageHandler", "API"] = apiQ -> apiFunc
+http["MessageHandler", "API"] = apiQ -> api
 ```
 
 И теперь для добавления новой функции мы можем создать короткое определение.
 Например, функция, которая вычисляет функцияю Бесселя порядка `n` от переменной `z`:
 
 ```mathematica
-besselAPI = Function[BesselJ[#n, N[#z]]]
+bessel = Function[BesselJ[#n, N[#z]]]
 ```
+
+Открыв браузер по адресу <http://localhost:8000/api/bessel?n=4&z=3.5>,
+мы увидим следующее:
+
+![bessel](bessel.png)
+
+Все работает. Можно определить и другие функции таким образом.
+Напрмер функция, которая возвращает список файлов в рабочей директории в формате JSON.
+Так стоп... подождите, ведь нам даже не нужно ее определять.
+Можно просто перейти по адресу <http://localhost:8000/api/FileNames?format=JSON>:
+
+![FileNames](fileNames.png)
+
+И вот мы получили список файлов в рабочей директории в текущий момент.
 
 ## Plot Server
 
@@ -352,11 +423,134 @@ besselAPI = Function[BesselJ[#n, N[#z]]]
 * getDataFiles - список файлов с данными для построения
 * getPoints - собственно точки для построения
 
+Просто список всех файлов с расширением _.dat_:
+
 ```mathematica
 getDataFiles = Function[
-    
+    FileNames["*.dat"]
 ]
 ```
+
+Сами точки из указанного файла в параметре `file`:
+
+```mathematica
+getDataFilePoints = Function[
+    Import[#file, "Table"]
+]
+```
+
+Для проверки создадим вот такой файл в рабочей директории:
+
+```mathematica
+Export["sin.dat", Table[{x, Sin[x]}, {x, -5, 5, 0.25}], "Table"]
+```
+
+И откроем браузер по адресу <http://localhost:8000/api/getDataFiles?format=JSON>:
+
+![getDataFiles](getDataFiles.png)
+
+А затем можно открыть и сам файл _sin.dat_,
+перейдя по адресу <http://localhost:8000/api/getDataFilePoints?file=sin.dat&format=JSON>:
+
+![getDataFilePoints](getDataFilePoints.png)
+
+Осталось добавить все это на страницу. Добавим в заголовок страницы вот такую ссылку:
+
+```html
+<head>
+    <!-- ... -->
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js" charset="utf-8"></script>
+</head>
+```
+
+Затем в самый низ элемента body вставим список файлов, элемент для графика и скрипт для построения:
+
+```html
+<body>
+    <!-- ... -->
+    <h2>Plot Server</h2>
+    <ui id="data-files">
+
+    </ui>
+    <div id="list-plotly"></div>
+    <script src="listPlotly.js"></script>
+</body>
+```
+
+Ну и создадим сам скрипт _listPlotly.js_ в той же директории.
+Скрипта мы получаем массив файлов и добавляем на страницу в виде списка:
+
+```js
+let dataFilesUl = document.getElementById("data-files")
+
+let dataFiles = getDataFiles();
+
+for (const file of dataFiles) {
+    let li = document.createElement("li"); 
+    li.innerHTML = "<a href=\"#" + file + "\">" + file + "</a>";
+    li.onclick = () => listPlotly(file);
+    dataFilesUl.appendChild(li);
+}
+```
+
+Стоит сразу отметить, что в момент добавления элемента в список,
+ему сразу же устанавливается событие по клику, которое будет выполнять функцию `listPlotly`.
+Чтобы это работало нужно определить еще несколько функций `getDataFiles` и `getDataFilePoints`:
+
+```js
+function httpGet(theUrl)
+{
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open( "GET", theUrl, false ); 
+    xmlHttp.send( null );
+    return xmlHttp.responseText;
+}
+
+function currentEndpoint(){
+    let protocol = window.location.protocol;
+    let host = window.location.host;
+    let port = window.location.port;
+    let endpoint = protocol + '//' + host;
+    return endpoint;
+}
+
+function getDataFiles(){
+    return JSON.parse(httpGet(currentEndpoint() + "/api/getDataFiles?format=JSON"));
+}
+
+function getDataFilePoints(file){
+    return JSON.parse(httpGet(currentEndpoint() + "/api/getDataFilePoints?file=" + file + "&format=JSON"));
+}
+```
+
+А также функцию для построения графика,
+которую мы возьмем из библиотеки [Plotly](https://plotly.com/javascript/getting-started/):
+
+```js
+function listPlotly(file){
+    let listPlotlyDiv = document.getElementById("list-plotly"); 
+    let data = getDataFilePoints(file); 
+    
+    let layout = {
+        autosize: false,
+        width: 500,
+        height: 300,
+        margin: {
+          l: 50,
+          r: 50,
+          b: 40,
+          t: 40,
+          pad: 4
+        }
+      };
+
+    Plotly.newPlot(listPlotlyDiv, [data], layout);
+}
+```
+
+Теперь обновим страницу и нажмем на _"cos.dat"_:
+
+![listPlotly](listPlotly.png)
 
 ## Wolfram Script Pages
 
@@ -369,5 +563,3 @@ getDataFiles = Function[
 ## Markdown
 
 Испортируем MD файлы как веб страницы.
-
-## 

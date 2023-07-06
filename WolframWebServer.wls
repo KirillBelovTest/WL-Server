@@ -62,16 +62,17 @@ Get["KirillBelov`HTTPHandler`Extensions`"]
 http = HTTPHandler[]
 
 
-tcp["CompleteHandler", "HTTP"] = HTTPPacketQ -> HTTPPacketLength
-tcp["MessageHandler", "HTTP"] = HTTPPacketQ -> http
+AddHTTPHandler[tcp, http]
 
 
-http["MessageHandler", "GETFile"] = GetFileRequestQ[{"html", "js", "css", "svg", "png", "jpg"}] -> ImportFileAsText
+http["MessageHandler", "GETFile"] = 
+    GetFileRequestQ[{"html", "js", "css", "svg", "png", "jpg"}] -> ImportFileAsText
 
 
 plotQ[request_Association] := And[
     request["Method"] == "GET", 
-    request["Path"] == "/plot"
+    request["Path"] == "/plot", 
+    SubsetQ[{"func", "from", "to"}, Keys[request["Query"]]]
 ]
 
 
@@ -89,6 +90,15 @@ plot[request_Association] := Module[{func, from, to, graphics},
 ]
 
 
+http["MessageHandler", "Plot"] = plotQ -> plot
+
+
+AssocMatchQ[<|"Method" -> "GET"|>][<|"Method" -> "GET", "Query" -> <||>|>] (* => True *)
+
+
+AssocMatchQ[<|"Path" -> __ ~~ ".html"|>][<|"Path" -> "/page.html"|>] (* => True *)
+
+
 plot[request_Association] := 
 APIFunction[
     {"func" -> "String", "from" -> "Number", "to" -> "Number"}, 
@@ -96,10 +106,7 @@ APIFunction[
 ][request["Query"]]
 
 
-http["MessageHandler", "Plot"] = plotQ -> plot
-
-
-apiQ = AssocMatchQ[<|"Path" -> "/api/" ~~ __|>]
+apiQ := AssocMatchQ[<|"Path" -> "/api/" ~~ __|>]
 
 
 argType[arg_String] := 
@@ -109,22 +116,42 @@ Which[
 ]
 
 
-apiFunс[request_Association] := 
-Module[{format}, 
+api[request_Association] := 
+Module[{format, result}, 
     format = If[KeyExistsQ[request["Query"], "format"], request["Query", "format"], "String"]; 
     With[{
         func = ToExpression[StringSplit[request["Path"], "/"][[-1]]], 
         args = Normal[Map[argType, Delete[request["Query"], "format"]]]
     }, 
-        ExportString[APIFunction[args, func][request["Query"]], format]
+        result = If[Length[args] > 0, 
+            APIFunction[args, func][request["Query"]], 
+            func[]
+        ]; 
+
+        (*Return: _String*)
+        ExportString[result, format]
     ]
 ]
 
 
-http["MessageHandler", "API"] = apiQ -> apiFunс
+http["MessageHandler", "API"] = apiQ -> api
 
 
-besselAPI = Function[BesselJ[#n, N@#z]]
+bessel = Function[BesselJ[#n, N[#z]]]
+
+
+Export["sin.dat", Table[{x, Sin[x]}, {x, -5, 5, 0.25}], "Table"]
+Export["cos.dat", Table[{x, Cos[x]}, {x, -5, 5, 0.25}], "Table"]
+
+
+getDataFiles = Function[
+    FileNames["*.dat"]
+]
+
+
+getDataFilePoints = Function[
+    Thread[{"x", "y"} -> Transpose[Import[#file, "Table"]]]
+]
 
 
 While[True, Pause[0.001]]
