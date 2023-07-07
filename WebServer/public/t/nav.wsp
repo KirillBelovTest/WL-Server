@@ -1,0 +1,22 @@
+<nav aria-label="Main" class="navbar navbar--fixed-top">
+                <div class="navbar__inner">
+                    <div class="navbar__items">
+                        <button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button">
+                            <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg>
+                        </button>
+                        <a class="navbar__brand" href="/">
+                            <div class="navbar__logo">
+                                <img src="/wljs-docs/img/logo.svg" alt="My Site Logo" class="themedImage_ToTc themedImage--light_HNdA" />
+                                <img src="/wljs-docs/img/logo.svg" alt="My Site Logo" class="themedImage_ToTc themedImage--dark_i4oU" />
+                            </div>
+                            <b class="navbar__title text--truncate">Wolfram Web Server</b>
+                        </a>
+                        <a class="navbar__item navbar__link" href="/stress.wsp">WS Stress Test</a>
+                        <a class="navbar__item navbar__link" href="/game.wsp">Game</a>
+                        <a class="navbar__item navbar__link" href="/plotter.wsp">Plotter</a>
+                        <a class="navbar__item navbar__link" href="/notebook.wsp">Notebook</a>
+                        <!--<a class="navbar__item navbar__link" href="/wljs-docs/docs/frontend/instruction">Frontend</a>-->
+                    </div>
+                </div>
+                <div role="presentation" class="navbar-sidebar__backdrop"></div>
+            </nav>

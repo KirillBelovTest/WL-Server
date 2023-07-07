@@ -1,0 +1,24 @@
+<div id="stat"></div>
+
+
+<?wsp (  
+    ram = {GetRam[Null]};
+    FrontEndVirtual[{
+        AttachDOM["stat"],
+        ListLinePlotly[ram, ImageSize->300]
+    }];
+    
+    While[True,
+        ram = {ram, GetRam[Null]}//Flatten;
+        Pause[1];
+    ];
+    
+    ) // Grow ?>
+
+<script type="module">
+    core.GetRam = async (args, env) => {
+        const data = await server.ask('getStats');
+        console.log('get stats...');
+        return data;
+    }
+</script>

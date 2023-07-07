@@ -1,0 +1,16 @@
+<?wsp 
+    lineData = {};
+    time = 0;
+    SessionSubmit[ScheduledTask[(
+        lineData = Append[lineData, {Sin[time], Cos[time]}Exp[-time/10]];
+        time = time + 0.5;
+    ) , {Quantity[0.2, "Seconds"], 50}, "AutoRemove"->True]];
+    ""
+?>
+
+<?wsp 
+    Graphics[{
+        Cyan,
+        Line[lineData // Hold]
+    }, Axes->True, ImageSize->250, "TransitionType"->"Linear"] // Plant
+?>
