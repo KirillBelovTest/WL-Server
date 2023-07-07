@@ -3,8 +3,8 @@
     time = 0;
     SessionSubmit[ScheduledTask[(
         lineData = Append[lineData, {Sin[time], Cos[time]}Exp[-time/10]];
-        time = time + 0.5;
-    ) , {Quantity[0.2, "Seconds"], 50}, "AutoRemove"->True]];
+        time = time + 0.1;
+    ) , {Quantity[0.1, "Seconds"], 150}, "AutoRemove"->True]];
     ""
 ?>
 
@@ -12,5 +12,5 @@
     Graphics[{
         Cyan,
         Line[lineData // Hold]
-    }, Axes->True, ImageSize->250, "TransitionType"->"Linear"] // Plant
+    }, Axes->True, ImageSize->350, "TransitionType"->"Linear", PlotRange -> {{-1, 1}, {-1, 1}}, Frame -> True] // Plant
 ?>
