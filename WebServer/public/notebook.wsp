@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr" class="plugin-pages plugin-id-default">
     <?wsp LoadPage["t/header.wsp"] ?>
+    <script type="module" src="https://cdn.jsdelivr.net/gh/JerryI/wolfram-js-frontend@master/public/dist/merged.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/gh/JerryI/wljs-editor@master/dist/kernel.js"></script>
+
     <body class="navigation-with-keyboard">
         <div id="__docusaurus">
             <div id="__docusaurus-base-url-issue-banner-container"></div>
@@ -9,13 +12,14 @@
             <div  class="main-wrapper mainWrapper_z2l0">
                 <header class="hero hero--primary heroBanner_qdFl">
                     <div class="container">
-                        <div style="width: auto; min-height: 420px; position: relative; border-radius: 6px; padding: 1em; background-color: transparent;">
-                            <?wsp LoadPage["c/plotter"] ?>
-                        </div>
-                        <p class="hero__subtitle" style="margin-top: -0.6em; padding-bottom: 0.6em;">Interactive demo</p>
+                        
+                        <p class="hero__subtitle" style="margin-top: -0.6em; padding-bottom: 0.6em;"><?wsp $CurrentRequest["Query", "name"] ?></p>
                         <!--<div class="buttons_AeoN"><a class="button button--secondary button--lg" href="/sorry">Getting started - 5min ⏱️</a></div>-->
                     </div>
                 </header>
+                <div class="container">
+                    <?wsp LoadPage["c/notebook", {notebook = $CurrentRequest["Query", "name"]}] ?>
+                </div>
             </div>
             <?wsp LoadPage["t/footer.wsp"] ?>
         </div>
