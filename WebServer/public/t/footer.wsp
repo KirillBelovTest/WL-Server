@@ -36,6 +36,7 @@
     socket.onopen = function(e) {
       console.log("[open] Соединение установлено");
       server.init(socket);
+      server.kernel.socket = socket; //the same socket for the master kernel and secondary kernel
       window.dispatchEvent(event);
       waterize();
     }; 
