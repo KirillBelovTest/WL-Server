@@ -22,7 +22,7 @@
     </body>
     <script>
         window.addEventListener("WSReady", () =>
-            server.socket.send('WebSocketChannel["jsio"]["Subscribe"]')
+            server.socket.send('Append[jsio, Global`client]')
         );
     </script>    
 </html>
