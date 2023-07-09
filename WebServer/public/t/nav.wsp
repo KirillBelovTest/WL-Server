@@ -12,6 +12,7 @@
                             <b class="navbar__title text--truncate">Wolfram Web Server</b>
                         </a>
                         <a class="navbar__item navbar__link" href="/stress.wsp">WS Stress Test</a>
+                        <a class="navbar__item navbar__link" href="/notebook.wsp?name=test">Notebook</a>
                         <a class="navbar__item navbar__link" href="/game.wsp">Game</a>
                         <a class="navbar__item navbar__link" href="/plotter.wsp">Plotter</a>
                         <!--<a class="navbar__item navbar__link" href="/wljs-docs/docs/frontend/instruction">Frontend</a>-->
