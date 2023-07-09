@@ -2,6 +2,7 @@ Get["https://raw.githubusercontent.com/JerryI/wolfram-js-frontend/master/Kernel/
 Get["https://raw.githubusercontent.com/JerryI/wolfram-js-frontend/master/Kernel/Utils.wl"]
 Get["https://raw.githubusercontent.com/JerryI/wolfram-js-frontend/master/Kernel/Cells.wl"]
 
+(* A polyfill for secondary kernel that makes a loop back to the master kernel evaluation, during the creation of FrontEndObject *)
 BeginPackage["JerryI`WolframJSFrontend`Remote`"];
 $ExtendDefinitions::using = ""
 Begin["Private`"]
@@ -13,30 +14,36 @@ End[];
 EndPackage[];
 
 
-
+(* support for graphics object transformation to the frontend objects *)
 Get["https://raw.githubusercontent.com/JerryI/wolfram-js-frontend/master/Kernel/WebObjects.wl"]
+(* support for post-evaluation transformation, i.e. boxes transformation and etc *)
 Get["https://raw.githubusercontent.com/JerryI/wolfram-js-frontend/master/Kernel/Evaluator.wl"]
 
-(* load graphics packages and etc *)
+(* load graphics packages and etc (usually it can be done automatically using plugins in the original WLJS Frontend) *)
 
 Get["https://raw.githubusercontent.com/JerryI/wljs-editor/main/src/boxes.wl"]
 Get["https://raw.githubusercontent.com/JerryI/wljs-graphics-d3/main/src/kernel.wl"]
 Get["https://raw.githubusercontent.com/JerryI/wljs-plotly/main/src/kernel.wl"]
 
+(* build a replacement table for graphics object defined in the previous three lines *)
 LoadWebObjects[];
 
+(* loop back to evaluate everyhting at the master kernel *)
 LocalKernel[ev_, cbk_, OptionsPattern[]] := (
     (* execute on the master kernel *)
     ev[cbk];
 );
 
+(* notebooks storage *)
 JerryI`WolframJSFrontend`Notebook`Notebooks = <||>
 
+(* processors, i.e. Wolfram Processor, HTML and etc *)
 Processors = {{}, {}, {}}
 
 Unprotect[NotebookOpen]
 ClearAll[NotebookOpen]
 
+(* match between socket object and associated notebook id *)
 $AssociationSocket = <||>
 
 NotebookOpen[id_String] := With[{cli = Global`client},
@@ -45,6 +52,7 @@ NotebookOpen[id_String] := With[{cli = Global`client},
     If[!KeyExistsQ[JerryI`WolframJSFrontend`Notebook`Notebooks, id], NotebookCreate["id"->id, "name"->id, "path"->Null]];
     $AssociationSocket[Global`client] = id;
 
+    (* generate cells lively *)
     Block[{JerryI`WolframJSFrontend`fireEvent = NotebookEventFire[Global`client]},
         CellListTree[id];
     ];
@@ -60,10 +68,12 @@ NotebookEvaluate[cellid_] := (
     ];
 );
 
+(* helper funtions to add language processors *)
 JerryI`WolframJSFrontend`Notebook`NotebookAddEvaluator[type_] := Processors[[2]] = Join[{type}, Processors[[2]]];
 JerryI`WolframJSFrontend`Notebook`NotebookAddEvaluator[type_, "HighestPriority"] := Processors[[1]] = Join[{type}, Processors[[1]]];
 JerryI`WolframJSFrontend`Notebook`NotebookAddEvaluator[type_, "LowestPriority"] := Processors[[3]] = Join[{type}, Processors[[3]]];
 
+(* get the default wolfram language processor *)
 Get["https://raw.githubusercontent.com/JerryI/wljs-editor/main/src/processor.wl"]
 
 
@@ -110,6 +120,7 @@ NotebookOperate[cellid_, op_, arg_] := (
     ];
 );
 
+(* extend the frontend object storage *)
 NExtendSingleDefinition[uid_, defs_][notebook_] := Module[{updated = False},
     Print["Direct definition extension"];
 
@@ -123,6 +134,7 @@ NExtendSingleDefinition[uid_, defs_][notebook_] := Module[{updated = False},
     ];  
 ]
 
+(* get the frontend object from storage *)
 NotebookGetObject[uid_] := Module[{obj}, With[{channel = $AssociationSocket[Global`client]},
     If[!KeyExistsQ[JerryI`WolframJSFrontend`Notebook`Notebooks[channel]["objects"], uid],
         Print["we did not find an object "<>uid<>" at the master kernel. failed"];
@@ -134,6 +146,9 @@ NotebookGetObject[uid_] := Module[{obj}, With[{channel = $AssociationSocket[Glob
     JerryI`WolframJSFrontend`Notebook`Notebooks[channel]["objects"][uid]["date"] = Now;
     JerryI`WolframJSFrontend`Notebook`Notebooks[channel]["objects"][uid]["json"]
 ]];
+
+
+(* events used to oeprate with cells. prerenders it on the server *)
 
 NotebookEventFire[addr_]["NewCell"][cell_] := (
     (*looks ugly actually. we do not need so much info*)
@@ -149,7 +164,8 @@ NotebookEventFire[addr_]["NewCell"][cell_] := (
                         "display"->cell["display"],
                         "state"->If[StringQ[ cell["state"] ], cell["state"], "idle"]
                     |>,
-            
+
+            (* prerender *)
             template = LoadPage[FileNameJoin[{"c", "notebook", cell["type"]<>".wsp"}], {Global`id = cell[[1]]}, "Base"->FileNameJoin[{Directory[], "public"}]]
         },
 
@@ -217,6 +233,7 @@ NotebookEventFire[addr_]["AddCellAfter"][next_, parent_] := (
     ];
 );
 
+(* when the output cell changes to the input one *)
 NotebookEventFire[addr_]["CellMorphInput"][cell_] := (
     (*looks ugly actually. we do not need so much info*)
     console["log", "fire event `` for ``", cell, addr];
