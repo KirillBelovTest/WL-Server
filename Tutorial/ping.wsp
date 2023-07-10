@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta name="viewport" charset="utf-8" content="width=device-width, initial-scale=1">
+        <title>Wolfram Web Server</title>
+        <?wsp LoadPage["Components/header.wsp"] ?>
+    </head>
+    <body>
+        <h1>Wolfram Web Server</h1>
+        <?wsp LoadPage["Components/navigation.wsp"]?>
+        
+    </body>
+</html>

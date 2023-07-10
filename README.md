@@ -65,7 +65,13 @@ flowchart TD
 
 Первое, что мы сделаем - это создадим и сразу же запустим сервер,
 который работает по протоколу TCP. Сделать это довольно просто.
-Сначала устанавливаем необходимые пакеты:
+Устанавливаем рабочую директорию:
+
+```mathematica
+SetDirectory["Tutorial"]
+```
+
+B устанавливаем необходимые пакеты:
 
 ```mathematica
 PacletInstall["KirillBelov/Internal"]
@@ -251,7 +257,7 @@ http["MessageHandler", "GETFile"] =
 
 И откроем браузер по адресу [http://localhostL:8000/index.html](http://localhost:8000/index.html).
 
-![Index](index-1.png)
+![Index](Tutorial/index-1.png)
 
 На скрншоте выше как раз изображен браузер с открытой страницей.
 Это означает, что запросы к веб-страницам или картинкам вполне работают.
@@ -310,7 +316,7 @@ http["MessageHandler", "Plot"] = plotQ -> plot
 
 Перейдем в браузере по адресу <http://localhost:8000/plot?func=Sin&from=1&to=10>:
 
-![Plot[Sin[x], {x, 1, 10}]](plot(sin).png)
+![Plot[Sin[x], {x, 1, 10}]](Tutorial/plot(sin).png)
 
 Все работает (по крайней мере у меня). Теперь мы понимаем последовательность действий,
 коорые нужно выполнить, чтобы добавить новые возможности серверу для работы с HTTP.
@@ -354,7 +360,7 @@ APIFunction[
 
 И снова откроем [index.html](http://localhost:8000/index.html):
 
-![index-2](index-2.png)
+![index-2](Tutorial/index-2.png)
 
 В итоге, мы можем создать небольшую функцию-обертку.
 Сначала как обычно проверка:
@@ -411,14 +417,14 @@ bessel = Function[BesselJ[#n, N[#z]]]
 Открыв браузер по адресу <http://localhost:8000/api/bessel?n=4&z=3.5>,
 мы увидим следующее:
 
-![bessel](bessel.png)
+![bessel](Tutorial/bessel.png)
 
 Все работает. Можно определить и другие функции таким образом.
 Напрмер функция, которая возвращает список файлов в рабочей директории в формате JSON.
 Так стоп... подождите, ведь нам даже не нужно ее определять.
 Можно просто перейти по адресу <http://localhost:8000/api/FileNames?format=JSON>:
 
-![FileNames](fileNames.png)
+![FileNames](Tutorial/fileNames.png)
 
 И вот мы получили список файлов в рабочей директории в текущий момент.
 
@@ -456,12 +462,12 @@ Export["sin.dat", Table[{x, Cos[x]}, {x, -5, 5, 0.25}], "Table"]
 
 И откроем браузер по адресу <http://localhost:8000/api/getDataFiles?format=JSON>:
 
-![getDataFiles](getDataFiles.png)
+![getDataFiles](Tutorial/getDataFiles.png)
 
 А затем можно открыть и сам файл _sin.dat_,
 перейдя по адресу <http://localhost:8000/api/getDataFilePoints?file=sin.dat&format=JSON>:
 
-![getDataFilePoints](getDataFilePoints.png)
+![getDataFilePoints](Tutorial/getDataFilePoints.png)
 
 Осталось добавить все это на страницу. Добавим в заголовок страницы вот такую ссылку:
 
@@ -557,7 +563,7 @@ function listPlotly(file){
 
 Теперь обновим страницу и нажмем на _"cos.dat"_:
 
-![listPlotly](listPlotly.png)
+![listPlotly](Tutorial/listPlotly.png)
 
 Все работает. Благодаря JavaScript мы можем выбирать доступные файлы на диске
 и смотреть их содержимое в виде графика. Благодаря использованию HTTP-клиента
@@ -661,7 +667,7 @@ http["MessageHandler", "Index"] =
 
 И перейдем на страницу по умолчанию <http://localhost:8000>
 
-![index-wsp](index-wsp.png)
+![index-wsp](Tutorial/index-wsp.png)
 
 ## WebSocket
 
