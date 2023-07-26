@@ -1,7 +1,7 @@
 #!/usr/bin/env wolframscript
 (* ::Package:: *)
 
-SetDirectory[FileNameJoin[{Directory[], "Tutorial"}]]
+SetDirectory[FileNameJoin[{Directory[], "WebServer"}]]
 
 
 Get["KirillBelov`Internal`"]
@@ -12,18 +12,12 @@ Get["KirillBelov`HTTPHandler`Extensions`"]
 
 
 tcp = TCPServer[]
-
-
+http = HTTPHandler[]
+AddHTTPHandler[tcp, http]
 listener = SocketListen[8000, tcp@#&]
 
 
-http = HTTPHandler[]
-
-
-AddHTTPHandler[tcp, http]
-
-
-http["MessageHandler", "GETFile"] = GetFileRequestQ[{"html", "js", "css", "svg", "png", "jpg"}] -> ImportFileAsText
+http["MessageHandler", "GETFile"] = GetFileRequestQ[{"html", "js", "css", "svg", "png", "jpg", "dat", "txt"}] -> ImportFile
 http["MessageHandler", "WSP"] = GetFileRequestQ[{"wsp"}] -> HypertextProcess
 http["MessageHandler", "Index"] = AssocMatchQ[<|"Path" -> "/"|>] -> Function[HypertextProcess[#, "index.wsp"]]
 

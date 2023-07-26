@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1" charset="utf-8">
+<?wsp LoadPage["Components/header.wsp"] ?>
+</head>
+<body>
+    <h1>Wolfram Web Server</h1>
+    <?wsp LoadPage["Components/navigation.wsp"] ?>
+    <div class="content">
+        <h2>
+            Как установить
+        </h2>
+        <div class="text">
+            Устанавливаем пакет из Paclet Repository:
+        </div>
+        <code contenteditable="false">
+            PacletInstall["KirillBelov/TCPServer"]
+        </code>
+    </div>
+    <?wsp LoadPage["Components/footer.wsp"] ?>
+</body>
+</html>

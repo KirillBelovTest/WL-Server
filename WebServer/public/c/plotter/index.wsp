@@ -1,9 +1,0 @@
-<div style="display:inline-block;">
-    <?wsp ListLinePlotly[plotData//Hold, ImageSize->700] // Plant ?>
-</div>
-<br><br>
-<p>Drag and drop <i>.dat</i> file</p>
-<br>
-<?wsp FileUploadView["Event"->"DroppedFile"] // Plant ?>
-<br>
-<br>

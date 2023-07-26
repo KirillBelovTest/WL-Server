@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" class="plugin-pages plugin-id-default">
+    <?wsp LoadPage["t/header.wsp"] ?>
+    <body class="navigation-with-keyboard">
+        <div id="__docusaurus">
+            <div id="__docusaurus-base-url-issue-banner-container"></div>
+            <div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div>
+            <?wsp LoadPage["t/nav.wsp"] ?>
+            <div  class="main-wrapper mainWrapper_z2l0">
+                <header class="hero hero--primary heroBanner_qdFl">
+                    <div class="container">
+                        <div style="width: auto; min-height: 420px; position: relative; border-radius: 6px; padding: 1em; background-color: transparent;">
+                        <ul>
+                        <?wsp Table[ With[{i=i}, ?>    
+                            <li>
+                                <h4><?wsp i ?></h4>
+
+                            <?wsp Plot[Sin[x^i], {x,0,3}, ImageSize->400, PlotStyle->Black] // Plant ?>
+                            </li>
+                            
+                        <?wsp ], {i, 40}] ?>    
+                        </div>
+                        </ul>
+                        <p class="hero__subtitle" style="margin-top: -0.6em; padding-bottom: 0.6em;">Stress demo</p>
+                        <!--<div class="buttons_AeoN"><a class="button button--secondary button--lg" href="/sorry">Getting started - 5min ⏱️</a></div>-->
+                    </div>
+                </header>
+            </div>
+            <?wsp LoadPage["t/footer.wsp"] ?>
+        </div>
+    </body>
+</html>
+
