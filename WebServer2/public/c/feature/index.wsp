@@ -1,9 +1,0 @@
-<div class="col col--4">
-                                    <div class="text--center">
-                                        <?wsp hero ?>
-                                    </div>
-                                    <div class="text--center padding-horiz--md">
-                                        <h3><?wsp title ?></h3>
-                                        <p><?wsp desc ?></p>
-                                    </div>
-</div>

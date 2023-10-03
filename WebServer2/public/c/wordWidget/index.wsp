@@ -1,8 +1,0 @@
-<pre>
-    <?wsp TextView[randomWord// Hold] // Plant  ?>
-</pre>
-<p>Press a button to generate</p>
-
-<div style="text-align:center; display: inline-block">
-    <?wsp ButtonView["Event"->"GenerateWord"] // Plant ?>
-</div>

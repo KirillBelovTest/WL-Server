@@ -1,2 +1,0 @@
-<?wsp $CurrentRequest["Seeds"][uid] = True; "" ?>
-<div id="<?wsp uid ?>"></div>

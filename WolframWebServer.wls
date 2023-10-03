@@ -1,9 +1,10 @@
 #!/usr/bin/env wolframscript
 (* ::Package:: *)
 
-SetDirectory[FileNameJoin[{Directory[], "WebServer"}]]
+SetDirectory[FileNameJoin[{Directory[], "Public"}]]
 
 
+Get["KirillBelov`CSocketListener`"]
 Get["KirillBelov`Internal`"]
 Get["KirillBelov`Objects`"]
 Get["KirillBelov`TCPServer`"]
