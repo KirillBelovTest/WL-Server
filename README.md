@@ -1,4 +1,4 @@
-# Wolfram Web Server
+# Wolfram Language Web Server
 
 ## TLDR
 

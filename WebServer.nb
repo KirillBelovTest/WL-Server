@@ -1,0 +1,120 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 13.3' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[      4161,        112]
+NotebookOptionsPosition[      3438,         94]
+NotebookOutlinePosition[      3844,        110]
+CellTagsIndexPosition[      3801,        107]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"$HistoryLength", " ", "=", " ", "0"}], ";"}], " "}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"ClearAll", "[", "\"\<`*\>\"", "]"}], ";"}], " "}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"SetDirectory", "[", 
+    RowBox[{"NotebookDirectory", "[", "]"}], "]"}], ";"}], " "}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"PacletDirectoryLoad", "[", 
+    RowBox[{"Directory", "[", "]"}], "]"}], ";"}], " "}], "\n", 
+ RowBox[{
+  RowBox[{"Get", "[", "\"\<KirillBelov`WolframWebServer`\>\"", "]"}], 
+  ";"}]}], "Code",
+ CellChangeTimes->{{3.913351760959163*^9, 3.9133518032928047`*^9}, {
+  3.915606505808819*^9, 3.9156065369360504`*^9}},
+ CellLabel->"In[1]:=",ExpressionUUID->"6045a4b0-cb4b-4475-997d-bbc0be05e7b1"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"server", " ", "=", " ", 
+   RowBox[{"CreateWebServer", "[", "8080", "]"}]}], ";"}]], "Code",
+ CellChangeTimes->{{3.913351818926832*^9, 3.9133518352711782`*^9}, {
+  3.9156065203799725`*^9, 3.9156065503804226`*^9}, {3.9156281720905743`*^9, 
+  3.9156281739009075`*^9}},
+ CellLabel->"In[6]:=",ExpressionUUID->"e61807c9-f90d-4b4d-a239-5f52adff69ff"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"hello", "[", "]"}], " ", ":=", " ", 
+  "\"\<Hello, World!\>\""}]], "Code",
+ CellChangeTimes->{{3.915606909004184*^9, 3.91560691460392*^9}},
+ CellLabel->"In[7]:=",ExpressionUUID->"c7304091-4d32-5743-b42f-2020a9619798"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"plot", "[", 
+     RowBox[{"func_String", ",", " ", 
+      RowBox[{"from_", "?", "NumericQ"}], ",", " ", 
+      RowBox[{"to_", "?", "NumericQ"}]}], "]"}], " ", ":=", " ", "\n", 
+    RowBox[{"Plot", "[", 
+     RowBox[{
+      RowBox[{"Evaluate", "[", 
+       RowBox[{
+        RowBox[{"Symbol", "[", "func", "]"}], "[", "x", "]"}], "]"}], ",", 
+      " ", 
+      RowBox[{"{", 
+       RowBox[{"x", ",", " ", "from", ",", " ", "to"}], "}"}], ",", " ", 
+      RowBox[{"ImageSize", "->", "Medium"}]}], "]"}]}], ";"}], " "}]], "Code",
+ CellChangeTimes->{{3.915606953683424*^9, 3.915607006949369*^9}, {
+  3.915607037081611*^9, 3.915607041007971*^9}, {3.9156294696536846`*^9, 
+  3.915629472291048*^9}},
+ CellLabel->"In[18]:=",ExpressionUUID->"d1fbe980-322e-cd40-bb02-ede733444451"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Global`chat`completions", "[", 
+   RowBox[{"role_String", ",", " ", "text_String"}], "]"}], " ", ":=", " ", 
+  "\n", 
+  RowBox[{"WolframAlpha", "[", 
+   RowBox[{"text", ",", " ", "\"\<SpokenResult\>\""}], "]"}]}]], "Code",
+ CellChangeTimes->{{3.9156070782652473`*^9, 3.915607086760528*^9}, {
+  3.915607137579777*^9, 3.9156071781354527`*^9}, {3.9156289060286903`*^9, 
+  3.91562898467268*^9}, {3.915629073196293*^9, 3.915629118982559*^9}, {
+  3.9156291851148434`*^9, 3.9156291907097282`*^9}, {3.915629319301754*^9, 
+  3.9156293522257824`*^9}},
+ CellLabel->"In[17]:=",ExpressionUUID->"8f5fd239-03dd-e541-98fd-d370072bc1c5"]
+},
+WindowSize->{718.5, 735},
+WindowMargins->{{Automatic, -5.25}, {Automatic, 0}},
+FrontEndVersion->"14.0 for Microsoft Windows (64-bit) (December 12, 2023)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"baa4bd0a-d5f5-4618-9f6d-65ac9e32ff1a"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[558, 20, 748, 20, 109, "Code",ExpressionUUID->"6045a4b0-cb4b-4475-997d-bbc0be05e7b1"],
+Cell[1309, 42, 379, 7, 45, "Code",ExpressionUUID->"e61807c9-f90d-4b4d-a239-5f52adff69ff"],
+Cell[1691, 51, 252, 5, 45, "Code",ExpressionUUID->"c7304091-4d32-5743-b42f-2020a9619798"],
+Cell[1946, 58, 830, 20, 61, "Code",ExpressionUUID->"d1fbe980-322e-cd40-bb02-ede733444451"],
+Cell[2779, 80, 655, 12, 61, "Code",ExpressionUUID->"8f5fd239-03dd-e541-98fd-d370072bc1c5"]
+}
+]
+*)
+
