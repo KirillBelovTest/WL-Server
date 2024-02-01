@@ -63,7 +63,8 @@ With[{
     server["CompleteHandler", "HTTP"] = HTTPPacketQ -> HTTPPacketLength;
     server["MessageHandler", "HTTP"] = HTTPPacketQ -> http; 
     server["Socket"] = CSocketOpen[port]; 
-    server["Listener"] = SocketListen[server["Socket"], server@#&]; 
+    server["Listener"] = SocketListen[server["Socket"], 
+        (Echo[ByteArrayToString[#["DataByteArray"]], "Message"]; server@#)&]; 
     
     Return[server]
 ]; 
@@ -81,6 +82,7 @@ With[{
 
 
 configure[server_WebServer, http_HTTPHandler] ^:= (
+    http["MessageHandler", "Options"] = optionsQ -> options[server]; 
     http["MessageHandler", "GETFile"] = getFileQ -> getFile[server]; 
     http["MessageHandler", "GETIndex"] = getIndexQ -> getIndex[server]; 
     http["MessageHandler", "API"] = apiRequestQ -> apiFunc[server]; 
@@ -100,6 +102,35 @@ configure[server_WebServer, http_HTTPHandler] ^:= (
 |>*)
 
 
+optionsQ[request_Association] := 
+request["Method"] === "OPTIONS"; 
+
+
+options[server_WebServer][request_Association] := 
+options[server, request]; 
+
+
+WebServer /: options[server_WebServer, request_Association] := 
+<|
+    "Code" -> 200, 
+    "Message" -> "OK", 
+    "Headers" -> <|
+        "Date" -> DateString[], 
+        "Accept" -> "*/*", 
+        "Server" -> "Wolfram Web Server", 
+        "Access-Control-Allow-Origin" -> request["Headers", "Origin"], 
+        "Access-Control-Allow-Methods" -> "GET, POST, OPTIONS", 
+        "Access-Control-Allow-Headers" -> request["Headers", "Access-Control-Request-Headers"], 
+        "Access-Control-Max-Age" -> 86400, 
+        "Content-Length" -> 0, 
+        "Keep-Alive" -> "timeout=2, max=100", 
+        "Vary" -> "Accept-Encoding, Origin", 
+        "Connection" -> "keep-alive"
+    |>, 
+    "Body" -> ""
+|>
+
+
 apiRequestQ[request_Association] := 
 StringMatchQ[request["Path"], "/api/" ~~ __, IgnoreCase -> True]
 
@@ -110,9 +141,20 @@ Which[
         request["Query"], 
     
     request["Method"] === "POST" && 
-    Length[request["Body"]] > 0, 
-        request["Query"] ~ Join ~ ImportByteArray[request["Body"], "RawJSON"]
+    Length[request["Body"]] > 0 && 
+    request["Headers", "Content-Type"] === "application/json", 
+        request["Query"] ~ Join ~ ImportByteArray[request["Body"], "RawJSON"], 
+    
+    True, 
+        request["Query"]
 ]; 
+
+
+toCamelCase[text_] := 
+ToLowerCase[#[[1]]] <> #[[2]] & @ StringTakeDrop[#, 1] & @ 
+StringJoin @ 
+Map[ToUpperCase[#[[1]]] <> #[[2]] &] @ 
+Map[StringTakeDrop[#, 1] &] @ StringSplit[text, "_"]; 
 
 
 apiFunc[server_][request_] := 
@@ -125,7 +167,7 @@ With[{
         StringRiffle[StringSplit[
             StringTrim[StringTrim[request["Path"], "/"], "api/"], 
         "/"], "`"], 
-    args = getArgs[request]
+    args = <|KeyValueMap[toCamelCase[#1] -> #2&, getArgs[request]]|>
 }, 
     Echo[request, "Request"]; 
     Echo[func, "Call"]; 
@@ -154,7 +196,7 @@ getFile[server, request];
 
 
 WebServer /: getFile[server_WebServer, request_Association] := 
-Import[urlPathToFileName[publicDirectory_String, request], "String"]; 
+Import[urlPathToFileName[server["PublicDirectory"], request], "String"]; 
 
 
 getIndexQ[request_Association] := 

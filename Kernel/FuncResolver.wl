@@ -19,7 +19,8 @@ patternInfo[Verbatim[Pattern][name_Symbol, Verbatim[Blank][type_Symbol: None]]] 
 	"Name" -> SymbolName[Unevaluated[name]], 
 	"Type" -> type, 
 	"Default" -> None, 
-	"Test" -> None
+	"Test" -> None, 
+	"Value" -> None
 |>; 
 
 
@@ -29,7 +30,8 @@ patternInfo[Verbatim[Pattern][name_Symbol, Verbatim[PatternTest][Verbatim[Blank]
 	"Name" -> SymbolName[Unevaluated[name]], 
 	"Type" -> type, 
 	"Default" -> None, 
-	"Test" -> test
+	"Test" -> test, 
+	"Value" -> None
 |>; 
 
 
@@ -39,7 +41,8 @@ patternInfo[Verbatim[Optional][Verbatim[Pattern][name_Symbol, Verbatim[Blank][ty
 	"Name" -> SymbolName[Unevaluated[name]], 
 	"Type" -> type, 
 	"Default" -> defaultValue, 
-	"Test" -> None
+	"Test" -> None, 
+	"Value" -> None
 |>; 
 
 
@@ -49,7 +52,8 @@ patternInfo[Verbatim[PatternTest][Verbatim[Pattern][name_Symbol, Verbatim[Blank]
 	"Name" -> SymbolName[Unevaluated[name]], 
 	"Type" -> type, 
 	"Default" -> None, 
-	"Test" -> testFunc
+	"Test" -> testFunc, 
+	"Value" -> None
 |>; 
 
 
@@ -59,7 +63,19 @@ patternInfo[Verbatim[Optional][Verbatim[Pattern][name_Symbol, Verbatim[PatternTe
 	"Name" -> SymbolName[Unevaluated[name]], 
 	"Type" -> type, 
 	"Default" -> defaultValue, 
-	"Test" -> testFunc
+	"Test" -> testFunc, 
+	"Value" -> None
+|>; 
+
+
+(*expr*)
+patternInfo[value_?AtomQ] := 
+<|
+	"Name" -> None, 
+	"Type" -> Head[value], 
+	"Default" -> None, 
+	"Test" -> None, 
+	"Value" -> value
 |>; 
 
 
@@ -69,14 +85,19 @@ DownValues[func][[All, 1]];
 
 
 parametersMatchQ[params_List, args_Association] := 
-Module[{argNames, requaredParameters, optionalParameters}, 
-	requaredParameters = Select[params, #Default === None&][[All, "Name"]]; 
-	optionalParameters = Select[params, #Default =!= None&][[All, "Name"]]; 
+Module[{argNames, argValues, requaredParameters, optionalParameters, valueParameters}, 
+	requaredParameters = Select[params, #Default === None && #Name =!= None&][[All, "Name"]]; 
+	optionalParameters = Select[params, #Default =!= None && #Name =!= None&][[All, "Name"]]; 
+	valueParameters = Select[params, #Name === None && #Value =!= None&][[All, "Value"]]; 
 	argNames = Keys[args]; 
+	argValues = Values[args]; 
 	
-	And[
-		SubsetQ[argNames, requaredParameters], 
-		SubsetQ[optionalParameters, Complement[argNames, requaredParameters]]
+	Or[
+		Sort[argValues] === Sort[valueParameters], 
+		And[
+			SubsetQ[argNames, requaredParameters], 
+			SubsetQ[optionalParameters, Complement[argNames, requaredParameters]]
+		]
 	]
 ]; 
 
@@ -115,7 +136,13 @@ dateConveterPattern = {DateObject, _} | {_, DateObjectQ};
 convert[dateConveterPattern][arg_] := DateObject[arg]; 
 
 
-convert[_, _][arg_] := arg; 
+symbolConveterPattern = {Symbol, _}; 
+
+
+convert[symbolConveterPattern][arg_] := Symbol[arg]; 
+
+
+convert[{_, _}][arg_] := arg; 
 
 
 callFunc[func_Symbol, args_Association] := 
