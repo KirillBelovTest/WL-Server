@@ -1,9 +1,11 @@
+(* ::Package:: *)
+
 PacletObject[
   <|
     "Name" -> "KirillBelov/WolframWebServer",
     "Description" -> "Wolfram Web Server",
     "Creator" -> "Kirill Belov",
-    "Version" -> "1.0.0",
+    "Version" -> "1.0.1",
     "WolframVersion" -> "13.3+",
     "PublisherID" -> "KirillBelov",
     "License" -> "MIT",
