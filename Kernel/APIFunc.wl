@@ -3,11 +3,11 @@
 (*internal package*)
 
 
-BeginPackage["KirillBelov`WolframWebServer`FuncResolver`"]; 
+BeginPackage["KirillBelov`WolframWebServer`APIFunc`"]; 
 
 
-callFunc::usage = 
-"callFunc[func, args]"; 
+APIFunc::usage = 
+"APIFunc[func, assoc]"; 
 
 
 Begin["`Private`"]; 
@@ -86,10 +86,10 @@ DownValues[func][[All, 1]];
 
 parametersMatchQ[params_List, args_Association] := 
 Module[{argNames, argValues, requaredParameters, optionalParameters, valueParameters}, 
-	requaredParameters = Select[params, #Default === None && #Name =!= None&][[All, "Name"]]; 
-	optionalParameters = Select[params, #Default =!= None && #Name =!= None&][[All, "Name"]]; 
+	requaredParameters = Map[ToLowerCase] @ Select[params, #Default === None && #Name =!= None&][[All, "Name"]]; 
+	optionalParameters = Map[ToLowerCase] @ Select[params, #Default =!= None && #Name =!= None&][[All, "Name"]]; 
 	valueParameters = Select[params, #Name === None && #Value =!= None&][[All, "Value"]]; 
-	argNames = Keys[args]; 
+	argNames = Map[StringReplace[#, "_" -> ""]&] @ Map[ToLowerCase] @ Keys[args]; 
 	argValues = Values[args]; 
 	
 	Or[
@@ -145,15 +145,32 @@ convert[symbolConveterPattern][arg_] := Symbol[arg];
 convert[{_, _}][arg_] := arg; 
 
 
-callFunc[func_Symbol, args_Association] := 
-Module[{params = selectSignaure[func, args], values = {}}, 
+argGet[assoc_Association, key_String] := 
+First @ Values @ KeySelect[
+	assoc, 
+    StringMatchQ[
+		StringReplace[key, "_" -> ""], 
+    	StringReplace[#, "_" -> ""], 
+		IgnoreCase -> True]&
+];
+
+
+argExistsQ[assoc_Association, key_String] := 
+MemberQ[
+	(StringReplace[#, "_" -> ""] & @* ToLowerCase) /@ Keys[assoc], 
+	(StringReplace[#, "_" -> ""] & @* ToLowerCase)[key]
+]
+
+
+APIFunc[func_Symbol, assoc_Association] := 
+Module[{params = selectSignaure[func, assoc], values}, 
 	values = Table[
-		If[KeyExistsQ[args, p["Name"]], 
-			convert[{p["Type"], p["Test"]}][args[p["Name"]]], 
+		If[argExistsQ[assoc, p["Name"]], 
+			convert[{p["Type"], p["Test"]}][argGet[assoc, p["Name"]]], 
 			Nothing
 		], 
 		{p, params}
-	];
+	]; 
 	func @@ values
 ]; 
 

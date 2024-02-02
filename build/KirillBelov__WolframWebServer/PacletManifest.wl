@@ -1,0 +1,31 @@
+<|
+    "Files"
+    ->
+    {
+        <|
+            "File"
+            ->
+            File[
+                "Kernel\\APIFunc.wl"
+            ]
+            ,
+            "Hash"
+            ->
+            "2e0dc8496aaa92fddb330de4d7230ad67c91189608f98eb5ee2b2a17b3ee51ef"
+                
+        |>
+        ,
+        <|
+            "File"
+            ->
+            File[
+                "Kernel\\WolframWebServer.wl"
+            ]
+            ,
+            "Hash"
+            ->
+            "9d19b1305cecf3f315a297855a06fac4064a86b4c9284451ee6dd8d0c0b5ad04"
+                
+        |>
+    }
+|>
