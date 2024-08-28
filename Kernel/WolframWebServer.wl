@@ -22,11 +22,9 @@ BeginPackage["KirillBelov`WolframWebServer`", {
     "KirillBelov`WebSocketHandler`", 
     "KirillBelov`WebSocketHandler`Extensions`", 
     "JerryI`WLX`", 
-    "JerryI`WSP`"
+    "JerryI`WSP`", 
+    "KirillBelov`WolframWebServer`APIFunc`"
 }]; 
-
-
-Get["KirillBelov`WolframWebServer`APIFunc`"]; 
 
 
 CreateWebServer::usage = 
@@ -45,30 +43,46 @@ CreateType[WebServer, TCPServer, {
     "Socket", 
     "Listener", 
     "HTTP", 
-    "PublicDirectory" -> "public", 
-    "APIContext" -> "Global`"
+    "WebSocket", 
+    "PublicDirectories", 
+    "APIContext"
 }]; 
 
 
 CreateWebServer[port_Integer, opts: OptionsPattern[{WebServer}]] := 
-start[WebServer["Port" -> port, opts]]; 
+create[WebServer["Port" -> port, opts, "PublicDirectories" -> {Directory[]}, "APIContext" -> "Global`"]]; 
 
 
-WebServer /: start[server_WebServer] := 
+WebServer /: create[server_WebServer] := 
 With[{
+    ws = WebSocketHandler[], 
     http = HTTPHandler[], 
     port = server["Port"]
 }, 
+    configure[server, ws]; 
     configure[server, http]; 
+
+    server["PublicDirectories"] = AbsoluteFileName /@ server["PublicDirectories"]; 
+
+    server["WebSocket"] = ws; 
+    server["CompleteHandler", "WebSocket"] = WebSocketPacketQ -> WebSocketPacketLength; 
+    server["MessageHandler", "WebSocket"] = WebSocketPacketQ -> ws; 
 
     server["HTTP"] = http; 
     server["CompleteHandler", "HTTP"] = HTTPPacketQ -> HTTPPacketLength;
     server["MessageHandler", "HTTP"] = HTTPPacketQ -> http; 
+    
     server["Socket"] = CSocketOpen[port]; 
+    
     server["Listener"] = SocketListen[server["Socket"], server@#&]; 
     
     Return[server]
 ]; 
+
+
+configure[server_WebServer, ws_WebSocketHandler] ^:= (
+    ws["MessageHandler", "Evaluate"] = WSEvaluateQ -> evaluate; 
+);
 
 
 (*
@@ -115,11 +129,11 @@ WebServer /: options[server_WebServer, request_Association] :=
 <|
     "Code" -> 200, 
     "Message" -> "OK", 
-    "Headers" -> <|
+    "Headers" -> DeleteMissing @ <|
         "Date" -> DateString[], 
         "Accept" -> "*/*", 
         "Server" -> "Wolfram Web Server", 
-        "Access-Control-Allow-Origin" -> request["Headers", "Origin"], 
+        "Access-Control-Allow-Origin" -> "*", 
         "Access-Control-Allow-Methods" -> "GET, POST, OPTIONS", 
         "Access-Control-Allow-Headers" -> request["Headers", "Access-Control-Request-Headers"], 
         "Access-Control-Max-Age" -> 86400, 
@@ -178,7 +192,10 @@ StringMatchQ[request["Path"], "/" ~~ __ ~~ "." ~~ $supportedExtensions, IgnoreCa
 
 
 urlPathToFileName[publicDirectory_String, request_Association] := 
-FileNameJoin[Join[{Directory[], publicDirectory}, StringSplit[StringTrim[request["Path"], "/"], "/"]]]; 
+FileNameJoin[Join[
+    FileNameSplit[publicDirectory], 
+    StringSplit[StringTrim[request["Path"], "/"], "/"]
+]]; 
 
 
 getFile[server_][request_] := 
